@@ -3,6 +3,9 @@ using System.Text;
 using System.Windows;
 using System.Windows.Input;
 using System.IO.Ports;
+using System.Windows.Controls;
+using System.Windows.Media;
+using System.Windows.Shapes;
 
 namespace ReflectProbeDesktop
 {
@@ -30,7 +33,7 @@ namespace ReflectProbeDesktop
 
             UpdateDebugInfo("Initializing.");
 
-             _serialPort = new SerialPort(COM_PORT);
+            _serialPort = new SerialPort(COM_PORT);
 
             _serialPort.BaudRate = BAUD_RATE;
             _serialPort.Parity = Parity.None;
@@ -53,17 +56,48 @@ namespace ReflectProbeDesktop
 
         public static void UpdateValues(int[] values)
         {
-            StringBuilder builder = new StringBuilder();
-            builder.Append("Values: ");
-            for(int i = 0; i < values.Length; i++)
-            {
-                builder.Append(values[i].ToString());
-                builder.Append(", ");
-            }
-
             _instance.Dispatcher.Invoke(() =>
             {
-                _instance.ValueDisplay.Text = builder.ToString();
+                _instance.BarChartCanvas.Children.Clear(); 
+
+                double canvasWidth = _instance.BarChartCanvas.ActualWidth;
+                double canvasHeight = _instance.BarChartCanvas.ActualHeight;
+                double barWidth = canvasWidth / values.Length; 
+
+                for (int i = 0; i < values.Length; i++)
+                {
+                    double barHeight = (values[i] / 255.0) * canvasHeight; 
+
+                    //Create a rectangle for each value.
+                    Rectangle rect = new Rectangle
+                    {
+                        Width = barWidth - 2, //Subtract 2 to leave some space between bars.
+                        Height = barHeight,
+                        Fill = new SolidColorBrush(Colors.Blue) 
+                    };
+
+                    Canvas.SetBottom(rect, 0); //Align the base of the rectangle to the bottom of the canvas.
+                    Canvas.SetLeft(rect, i * barWidth); //Position each rectangle.
+
+                    _instance.BarChartCanvas.Children.Add(rect);
+
+                    //Create a TextBox for each value, placed above each bar.
+                    TextBox textBox = new TextBox
+                    {
+                        Text = values[i].ToString(),
+                        Width = barWidth - 2, //Match the bar's width
+                        Background = new SolidColorBrush(Colors.Transparent), //Optional: make background transparent.
+                        BorderBrush = new SolidColorBrush(Colors.Transparent), //Optional: remove border.
+                        TextAlignment = TextAlignment.Center, //Center the text.
+                        IsReadOnly = true //Make it readonly if it's just for display.
+                    };
+
+                    //Position the TextBox just above the bar.
+                    Canvas.SetBottom(textBox, barHeight + 1); //+1 or more to ensure it's above the bar.
+                    Canvas.SetLeft(textBox, i * barWidth);
+
+                    _instance.BarChartCanvas.Children.Add(textBox);
+                }
             });
         }
 
@@ -146,8 +180,8 @@ namespace ReflectProbeDesktop
 
             //Parse the remaining values, starting after the magic numbers.
             for (int i = 1; i < parts.Length - 1; i++)
-            { 
-                
+            {
+
                 if (Int32.TryParse(parts[i], out int value))
                 {
                     sensorValues[i - 1] = value;
@@ -156,7 +190,7 @@ namespace ReflectProbeDesktop
                 {
                     Console.WriteLine($"Failed to parse value at index {i}");
                     // Handle parsing failure if necessary
-                    
+
                 }
             }
 

@@ -7,17 +7,8 @@
         mc:Ignorable="d"
         Title="MainWindow" Height="450" Width="800"
         KeyDown="Window_KeyDown">
-    <Grid>
-        <TextBlock Name="DebugTextBlock" Text="Debug info will be shown here" VerticalAlignment="Top" />
-        <TextBlock x:Name="ValueDisplay" Text="Values here." VerticalAlignment="Top" Margin="56,119,174,0" RenderTransformOrigin="0.5,0.5" Height="63" >
-            <TextBlock.RenderTransform>
-                <TransformGroup>
-                    <ScaleTransform/>
-                    <SkewTransform/>
-                    <RotateTransform Angle="0.648"/>
-                    <TranslateTransform/>
-                </TransformGroup>
-            </TextBlock.RenderTransform>
-        </TextBlock>
+    <Grid Margin="10,58,10,11">
+        <TextBlock Name="DebugTextBlock" Text="Debug info will be shown here" VerticalAlignment="Top" Height="21" Margin="0,-55,0,0" />
+        <Canvas x:Name="BarChartCanvas" Background="LightGray" Grid.Row="2"/>
     </Grid>
 </Window>
