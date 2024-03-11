@@ -97,13 +97,30 @@ namespace ReflectProbeDesktop
                     Canvas.SetLeft(textBox, i * barWidth);
 
                     _instance.BarChartCanvas.Children.Add(textBox);
+
+                    //Create a TextBox for the index at the bottom of each bar.
+                    TextBox indexTextBox = new TextBox
+                    {
+                        Text = i.ToString(), // Set text to the index
+                        Width = barWidth - 2,
+                        Background = new SolidColorBrush(Colors.Transparent),
+                        BorderBrush = new SolidColorBrush(Colors.Transparent),
+                        TextAlignment = TextAlignment.Center,
+                        IsReadOnly = true,
+                        Foreground = new SolidColorBrush(Colors.White) 
+                    };
+
+                    //Calculate the position for the index TextBox. If the bar is very short, adjust the position to prevent overlap with the value TextBox.
+                    double indexPosition = Math.Max(1, barHeight - 20); // Ensure the index is visible even for very short bars. Adjust 20 as needed.
+
+                    Canvas.SetBottom(indexTextBox, indexPosition); // Position the index TextBox inside the bar, at the bottom
+                    Canvas.SetLeft(indexTextBox, i * barWidth);
+                    _instance.BarChartCanvas.Children.Add(indexTextBox);
                 }
             });
         }
 
-        private static void DataReceivedHandler(
-                    object sender,
-                    SerialDataReceivedEventArgs e)
+        private static void DataReceivedHandler(object sender, SerialDataReceivedEventArgs e)
         {
             SerialPort sp = (SerialPort)sender;
             string indata = sp.ReadExisting();
@@ -112,42 +129,19 @@ namespace ReflectProbeDesktop
             incompleteData += indata;
 
             int endIndex = incompleteData.IndexOf("\n");
-            while (endIndex >= 0) // While there are complete messages in the buffer
+            while (endIndex >= 0) //While there are complete messages in the buffer.
             {
-                // Extract the complete message including the ending newline
+
                 string completeMessage = incompleteData.Substring(0, endIndex + 1);
-                // Remove the processed message from the buffer
+                //Remove the processed message from the buffer.
                 incompleteData = incompleteData.Substring(endIndex + 1);
 
-                // Process the complete message here
+                //Process the complete message here.
                 ProcessMessage(completeMessage);
 
-                // Look for the next complete message
+                //Look for the next complete message.
                 endIndex = incompleteData.IndexOf("\n");
             }
-
-
-            /*
-            //Check if the beginning of the string is the magic number, 12345, to indicate a sample.
-            if (indata.Length < MAGIC_SAMPLE_NUMBERS.Length)
-            {
-                UpdateDebugInfo(indata);
-                return;
-            }
-
-            string magicNumberSlot = indata.Substring(MAGIC_SAMPLE_NUMBERS.Length);
-            
-            if(magicNumberSlot == MAGIC_SAMPLE_NUMBERS)
-            {
-                int[] values = ExtractIntsFromValuesIncludingMagicNumbers(indata);
-
-                UpdateValues(values);
-            }
-            else
-            {
-                UpdateDebugInfo(indata);
-            }
-            */
         }
 
         private static void ProcessMessage(string completeMessage)
@@ -181,7 +175,6 @@ namespace ReflectProbeDesktop
             //Parse the remaining values, starting after the magic numbers.
             for (int i = 1; i < parts.Length - 1; i++)
             {
-
                 if (Int32.TryParse(parts[i], out int value))
                 {
                     sensorValues[i - 1] = value;
@@ -189,8 +182,6 @@ namespace ReflectProbeDesktop
                 else
                 {
                     Console.WriteLine($"Failed to parse value at index {i}");
-                    // Handle parsing failure if necessary
-
                 }
             }
 
